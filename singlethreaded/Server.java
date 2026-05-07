@@ -3,19 +3,24 @@ package singlethreaded;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server {
-    public static void run() throws IOException{
-        int port = 8081;
-        ServerSocket socket = new ServerSocket(port);
-        socket.setSoTimeout(10000);
-        while (true) {
-            System.out.println("Server is listening on port " + port);
-            Socket acceptedConnection = socket.accept();
-            System.out.println("Connection accepted from the client with address " + acceptedConnection.getRemoteSocketAddress());
-            ClientHandler handler = new ClientHandler(acceptedConnection);
-            handler.handle();
-            socket.close();
+
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
+    private static final int PORT = 8081;
+
+    public static void run() throws IOException {
+
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            logger.info("Single-threaded server started. Listening on port " + PORT);
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                logger.info("Connection accepted from: " + clientSocket.getRemoteSocketAddress());
+                ClientHandler handler = new ClientHandler(clientSocket);
+                handler.handle();
+            }
         }
     }
 
@@ -23,7 +28,7 @@ public class Server {
         try {
             run();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "Server failed to start or encountered a fatal error", ex);
         }
     }
 }
